@@ -17,7 +17,7 @@ WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 29.0
 DURATION = 20.0
-VID_NM = 'noise.mp4'
+VID_NM = 'temp.mp4'
 AUD_NM = 'beethoven.op132.mvt3.mp3'
 OUT_NM = 'out.mp4'
 
