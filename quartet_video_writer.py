@@ -12,6 +12,7 @@ import cv2
 import tqdm
 import sys
 import os 
+from audio_reader import get_pressures 
 
 from read_quartet import read_midi 
 notes_by_player = read_midi('beethoven.op132.mvt3.mid')
@@ -19,7 +20,7 @@ notes_by_player = read_midi('beethoven.op132.mvt3.mid')
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 24.0
-DURATION = 300.0
+DURATION = 100.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'beethoven.op132.mvt3.mp3'
 OUT_NM = 'quartet.mp4'
@@ -57,11 +58,29 @@ def width_from_beat(frame_nb, beat):
 def brightness_from_width(w):
      return (1.0 - ((w-WIDTH//2)/float(WIDTH//2))**2.0)**0.5
 
-first_active_note_idx_by_player = {p:0 for p in notes_by_player}
 
+
+
+pressures, audio_frame_rate, duration = get_pressures(AUD_NM)
+def get_segment(start, end):
+    return pressures[int(audio_frame_rate*start) : int(audio_frame_rate*end), :]
+def get_power(start, end):
+    return np.mean(np.square(get_segment(start, end)))
+
+first_active_note_idx_by_player = {p:0 for p in notes_by_player}
 print('GENERATING VIDEO...')
 for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     frame = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
+
+    time = frame_nb/FRAME_RATE 
+
+    p_wide = get_power(max(0, time-0.25), min(duration, time+0.25))
+    p_thin = get_power(max(0, time-0.05), min(duration, time+0.05))
+    is_edge = 1e-4 + 1.2 * (p_thin**0.5) < p_wide**0.5
+
+    if is_edge:
+        frame[200:300, 200:300, 0] = 255
+    frame[100:200, 100:200, 1] = 0
 
     # draw moving box: 
     for p in notes_by_player:
@@ -78,9 +97,12 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
             brightness = 0.7 * min(brightness_from_width(w_start), brightness_from_width(w_end))
             if w_start < WIDTH//2 < w_end:
                 brightness = 1.3
+                if abs( 0.5 - (w_end - WIDTH//2)/float(w_end-w_start) ) > 0.45 : 
+                    frame[100:200, 100:200, 1] = 255
             frame[h:h+(2*PIXELS_PER_SEMITONE) , w_start:w_end , :] = (
                 colors_by_player[p] * brightness
             ).astype(np.uint8)
+
 
     # draw vertical line: 
     frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = green 
