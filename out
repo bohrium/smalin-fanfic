@@ -1,0 +1,10 @@
+0 <midi track 'Klaviertrio d-moll Op.49' 152 messages>
+1 <midi track 'Staff' 7170 messages>
+2 <midi track 'Staff-1' 6572 messages>
+3 <midi track 'Staff-2' 20466 messages>
+[36mtrack 3:`[35mStaff-2[36m` (player [35mpiano rh[36m) has [33m20466 [36mmessages
+4 <midi track 'Staff-3' 16924 messages>
+5 <midi track 'Staff-4' 5 messages>
+6 <midi track '' 2 messages>
+
+{'piano rh': 3}
