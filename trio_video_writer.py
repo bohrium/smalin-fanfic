@@ -20,13 +20,41 @@ notes_by_player = read_midi('mendel.mid')
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 24.0
-DURATION = 80.0
+DURATION = 65.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'mendel.mp3'
 OUT_NM = 'trio.mp4'
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 video = cv2.VideoWriter(VID_NM, fourcc, FRAME_RATE, (WIDTH, HEIGHT)) 
+
+T_MINUS = -10.0
+dt = 0.01 
+#   real times, anim times
+distortions = np.array((
+    ( T_MINUS , T_MINUS ),
+    (     0.0 ,  0.0    ),
+    (    11.0 , 10.8    ), # give time    (do if anim is otherwise early)
+    (    20.0 , 20.2    ),
+    (    20.0 , 20.2    ),
+    (    22.0 , 22.6    ), # take time    (do if anim is otherwise late)
+    (    24.0 , 24.0    ),
+    (    27.0 , 27.5    ),
+    (    30.0 , 30.2    ),
+    (    34.0 , 34.2    ),
+    (    37.0 , 36.8    ),
+    (    41.0 , 40.9    ),
+    (    43.0 , 43.4    ),
+    (    47.0 , 47.3    ),
+    (    55.0 , 55.3    ),
+    (    60.0 , 60.0    ),
+    (DURATION , DURATION)
+))
+linear_interp = np.interp(np.arange(T_MINUS, DURATION, dt), distortions[:,0], distortions[:,1]) 
+
+def anim_time(t):
+    quot = int((t-T_MINUS)/dt)
+    return linear_interp[quot] + (t-T_MINUS - quot*dt)
 
                     #B   #G   #R
 red     = np.array([  0,   0, 255])
@@ -48,21 +76,39 @@ octave_offset_by_player = {
     'piano lh': -1,
     'piano rh': -2,
 }
+octave_offset_by_player = {
+    'violin': 1,
+    'cello': 1,
+    'piano lh': -1,
+    'piano rh': -2,
+}
+curve_intensity_by_player = {
+    'violin': 2.0,
+    'cello': 2.0,
+    'piano lh': 0.0,
+    'piano rh': 0.0,
+}
 
 PIXELS_PER_BEAT = 20
 BEAT_RATE = 3*90.0/60
 PIXELS_PER_SEMITONE = 6
+CURVE_SCALE = 100.0
 BEATS_IN_ANACRUSIS = 2
 
 START_TIME = 2.333 - BEATS_IN_ANACRUSIS/BEAT_RATE 
 
 def height_from_pitch(pitch):
     return HEIGHT - PIXELS_PER_SEMITONE * pitch 
-def width_from_beat(frame_nb, beat): 
-    frame_nb -= START_TIME * FRAME_RATE 
-    linear = PIXELS_PER_BEAT * (beat - (BEAT_RATE/FRAME_RATE) * frame_nb)
-    stretched = linear + 200*np.tanh(linear/100.0) 
+def width_from_beat(frame_nb, beat, curve_intensity=2.0): 
+    real_time = anim_time(frame_nb/float(FRAME_RATE) - START_TIME)
+    linear = PIXELS_PER_BEAT * (beat - BEAT_RATE * real_time)
+    stretched = linear + curve_intensity * CURVE_SCALE * np.tanh(linear/CURVE_SCALE)
     return int(WIDTH//2 + stretched)
+
+    #frame_nb -= START_TIME * FRAME_RATE 
+    #linear = PIXELS_PER_BEAT * (beat - (BEAT_RATE/FRAME_RATE) * frame_nb)
+    #stretched = linear + curve_intensity * CURVE_SCALE * np.tanh(linear/CURVE_SCALE)
+    #return int(WIDTH//2 + stretched)
 
 def brightness_from_width(w):
      return (1.0 - ((w-WIDTH//2)/float(WIDTH//2))**2.0)**0.5
@@ -81,7 +127,7 @@ print('GENERATING VIDEO...')
 for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     frame = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
 
-    time = frame_nb/FRAME_RATE 
+    time = anim_time(frame_nb/FRAME_RATE)
 
     #p_wide = get_power(max(0, time-0.25), min(duration, time+0.25))
     #p_thin = get_power(max(0, time-0.05), min(duration, time+0.05))
@@ -94,8 +140,8 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     # draw moving box: 
     for p in notes_by_player:
         for note in notes_by_player[p][first_active_note_idx_by_player[p]:]:
-            w_start = width_from_beat(frame_nb, note.start_beat)
-            w_end   = width_from_beat(frame_nb, note.end_beat)
+            w_start = width_from_beat(frame_nb, note.start_beat, curve_intensity_by_player[p])
+            w_end   = width_from_beat(frame_nb, note.end_beat, curve_intensity_by_player[p])
             if not (0 <= w_start):
                 first_active_note_idx_by_player[p] += 1
                 continue
@@ -108,7 +154,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                 brightness = 1.3
                 #if abs( 0.5 - (w_end - WIDTH//2)/float(w_end-w_start) ) > 0.45 : 
                 #    frame[100:200, 100:200, 1] = 255
-            hh = PIXELS_PER_SEMITONE
+            hh = int(0.8 * PIXELS_PER_SEMITONE)
             frame[h-hh:h+hh, w_start:w_end , :] = (
                 np.minimum(255, colors_by_player[p] * brightness)
             ).astype(np.uint8)
