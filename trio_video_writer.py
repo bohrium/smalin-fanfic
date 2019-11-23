@@ -42,13 +42,22 @@ distortions = np.array((
     (    27.0 , 27.5    ),
     (    30.0 , 30.2    ),
     (    34.0 , 34.2    ),
-    (    37.0 , 36.8    ),
+    (    37.0 , 36.6    ),
     (    41.0 , 40.9    ),
     (    43.0 , 43.4    ),
     (    47.0 , 47.3    ),
-    (    55.0 , 55.3    ),
+    (    50.0 , 49.8    ),
+    (    53.0 , 53.2    ),
+    (    55.0 , 55.2    ),
+    (    56.5 , 56.4    ),
+    (    57.2 , 57.3    ),
+    (    58.0 , 58.0    ),
     (    60.0 , 60.0    ),
-    (DURATION , DURATION)
+    (    65.0 , 65.0    ),
+    (    65.7 ,165.0    ),
+    (    66.3 ,225.0    ),
+    (    67.0 ,323.0    ),
+    (    87.0 ,343.0    ),
 ))
 linear_interp = np.interp(np.arange(T_MINUS, DURATION, dt), distortions[:,0], distortions[:,1]) 
 
@@ -76,17 +85,23 @@ octave_offset_by_player = {
     'piano lh': -1,
     'piano rh': -2,
 }
-octave_offset_by_player = {
-    'violin': 1,
-    'cello': 1,
-    'piano lh': -1,
-    'piano rh': -2,
+thickness_by_player = {
+    'violin': 0.7,
+    'cello': 1.6,
+    'piano lh': 1.3,
+    'piano rh': 1.0,
 }
 curve_intensity_by_player = {
     'violin': 2.0,
     'cello': 2.0,
     'piano lh': 0.0,
     'piano rh': 0.0,
+}
+narrowness_by_player = {
+    'violin': 1.0,
+    'cello': 1.0,
+    'piano lh':10.0,
+    'piano rh':10.0,
 }
 
 PIXELS_PER_BEAT = 20
@@ -95,7 +110,8 @@ PIXELS_PER_SEMITONE = 6
 CURVE_SCALE = 100.0
 BEATS_IN_ANACRUSIS = 2
 
-START_TIME = 2.333 - BEATS_IN_ANACRUSIS/BEAT_RATE 
+#START_TIME = 2.333 - BEATS_IN_ANACRUSIS/BEAT_RATE 
+START_TIME =  2.333 - BEATS_IN_ANACRUSIS/BEAT_RATE 
 
 def height_from_pitch(pitch):
     return HEIGHT - PIXELS_PER_SEMITONE * pitch 
@@ -110,8 +126,8 @@ def width_from_beat(frame_nb, beat, curve_intensity=2.0):
     #stretched = linear + curve_intensity * CURVE_SCALE * np.tanh(linear/CURVE_SCALE)
     #return int(WIDTH//2 + stretched)
 
-def brightness_from_width(w):
-     return (1.0 - ((w-WIDTH//2)/float(WIDTH//2))**2.0)**0.5
+def brightness_from_width(w, narrowness):
+     return (1.0 - ((w-WIDTH//2)/float(WIDTH//2))**2.0)**(narrowness*0.5)
 
 
 
@@ -127,18 +143,8 @@ print('GENERATING VIDEO...')
 for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     frame = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
 
-    time = anim_time(frame_nb/FRAME_RATE)
-
-    #p_wide = get_power(max(0, time-0.25), min(duration, time+0.25))
-    #p_thin = get_power(max(0, time-0.05), min(duration, time+0.05))
-    #is_edge = 1e-4 + 1.2 * (p_thin**0.5) < p_wide**0.5
-
-    #if is_edge:
-    #    frame[200:300, 200:300, 0] = 255
-    #frame[100:200, 100:200, 1] = 0
-
     # draw moving box: 
-    for p in notes_by_player:
+    for p in ('piano rh', 'piano lh', 'cello', 'violin'):
         for note in notes_by_player[p][first_active_note_idx_by_player[p]:]:
             w_start = width_from_beat(frame_nb, note.start_beat, curve_intensity_by_player[p])
             w_end   = width_from_beat(frame_nb, note.end_beat, curve_intensity_by_player[p])
@@ -149,12 +155,11 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                 break
 
             h = height_from_pitch(note.pitch + 12 * octave_offset_by_player[p])
-            brightness = 0.7 * min(brightness_from_width(w_start), brightness_from_width(w_end))
+            nn = narrowness_by_player[p]
+            brightness = 0.7 * min(brightness_from_width(w_start, nn), brightness_from_width(w_end, nn))
             if w_start < WIDTH//2 < w_end:
                 brightness = 1.3
-                #if abs( 0.5 - (w_end - WIDTH//2)/float(w_end-w_start) ) > 0.45 : 
-                #    frame[100:200, 100:200, 1] = 255
-            hh = int(0.8 * PIXELS_PER_SEMITONE)
+            hh = int(thickness_by_player[p] * PIXELS_PER_SEMITONE)
             frame[h-hh:h+hh, w_start:w_end , :] = (
                 np.minimum(255, colors_by_player[p] * brightness)
             ).astype(np.uint8)
