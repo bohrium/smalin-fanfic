@@ -20,7 +20,7 @@ notes_by_player = read_midi('music/bach.007.04.mid')
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 24.0
-DURATION = 215.0
+DURATION = 20#215.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'music/bach.007.04.mp3'
 OUT_NM = 'aria.mp4'
@@ -189,11 +189,20 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
             if w_start < WIDTH//2 < w_end:
                 brightness = 1.3
             hh = int(thickness_by_player[p] * PIXELS_PER_SEMITONE)
-            frame[h-hh:h+hh, w_start:w_end , :] = (
-                #np.minimum(255, colors_by_player[p] * brightness)
-                np.minimum(255, colors[(note.pitch*5)%12] * brightness)
-            ).astype(np.uint8)
 
+            ## instrumental:
+            #cc = lambda b: np.minimum(255, colors_by_player[p] * brightness)
+            # harmonic:
+            cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
+
+            # fuzzy rectangle:
+            for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
+                w_mid = (w_end + w_start)/2.0
+                w_dif = (w_end - w_start)/2.0
+                frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = np.maximum(
+                    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :],
+                    cc(b).astype(np.uint8)
+                )
 
     # draw vertical line: 
     frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = green 
