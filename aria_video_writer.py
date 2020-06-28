@@ -103,9 +103,9 @@ octave_offset_by_player = {
     'v1': 1,
     'v2': 1,
     'tn': 0,
-    'pr':-2, 
-    'pl':-3, 
-    'cl':-3,
+    'pr':-4, 
+    'pl':-1, 
+    'cl':-1,
 }
 thickness_by_player = {
     'v1': 0.7,
@@ -192,51 +192,57 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
             ## instrumental:
             #cc = lambda b: np.minimum(255, colors_by_player[p] * brightness)
-            # harmonic:
-            cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
+            ## harmonic:
+            #cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
+            # brightness:
+            cc = lambda b: np.minimum(255, colors[(note.pitch)%12] * brightness * b)
 
-            # popping rectangle:
-            for g,b in [(1.0,0.8), (0.8,1.0)]:
-                w_mid = (w_end + w_start)/2.0
-                w_dif = (w_end - w_start)/2.0
+            #if p in ('v2',):
+            #    # popping rectangle:
+            #    for g,b in [(1.0,0.8), (0.8,1.0)]:
+            #        w_mid = (w_end + w_start)/2.0
+            #        w_dif = (w_end - w_start)/2.0
 
-                g *= max(0.2 if w_mid < WIDTH//2 else 1.0,
-                    min(1.0, 0.5*PIXELS_PER_BEAT/(0.1+abs(w_mid-WIDTH//2)))
-                )
+            #        g *= max(0.4 if w_mid < WIDTH//2 else 1.0,
+            #            min(1.0, 0.5*PIXELS_PER_BEAT/(0.1+abs(w_mid-WIDTH//2)))
+            #        )
 
-                frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
-                    cc(b).astype(np.uint8)
-                )
+            #        frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
+            #            cc(b).astype(np.uint8)
+            #        )
 
-            ## galloping rectangle:
-            #for g,b in [(1.0,0.8), (0.8,1.0)]:
-            #    w_mid = (w_end + w_start)/2.0
-            #    w_dif = (w_end - w_start)/2.0
+            if p in ('v1', 'v2'):
+                # galloping rectangle:
+                for g,b in [(1.0,0.8), (0.8,1.0)]:
+                    w_mid = (w_end + w_start)/2.0
+                    w_dif = (w_end - w_start)/2.0
 
-            #    g *= max(0.2, min(1.0, 0.5*PIXELS_PER_BEAT/(
-            #        0.1+abs(w_start-WIDTH//2)
-            #    )) if w_start < WIDTH//2 else 0.2)
+                    g *= max(0.4, min(1.0, 0.5*PIXELS_PER_BEAT/(
+                        0.1+abs(w_start-WIDTH//2)
+                    )) if w_start < WIDTH//2 else 0.4)
 
-            #    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
-            #        cc(b).astype(np.uint8)
-            #    )
+                    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
+                        cc(b).astype(np.uint8)
+                    )
 
-            ## hollow rectangle:
-            #for g,b in [(1.0,1.0), (0.8,0.75), (0.7,0.5), (0.6, 0.25), (0.5,0.0)]:
-            #    w_mid = (w_end + w_start)/2.0
-            #    w_dif = (w_end - w_start)/2.0
-            #    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
-            #        cc(b).astype(np.uint8)
-            #    )
+            if p in ('pr', 'tn'):
+                # hollow rectangle:
+                for g,b in [(1.0,1.0), (0.8,0.75), (0.7,0.5), (0.6, 0.25), (0.5,0.0)]:
+                    w_mid = (w_end + w_start)/2.0
+                    w_dif = (w_end - w_start)/2.0
+                    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
+                        cc(b).astype(np.uint8)
+                    )
 
-            ## fuzzy rectangle:
-            #for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
-            #    w_mid = (w_end + w_start)/2.0
-            #    w_dif = (w_end - w_start)/2.0
-            #    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = np.maximum(
-            #        frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :],
-            #        cc(b).astype(np.uint8)
-            #    )
+            if p in ('pl', 'cl'):
+                # fuzzy rectangle:
+                for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
+                    w_mid = (w_end + w_start)/2.0
+                    w_dif = (w_end - w_start)/2.0
+                    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = np.maximum(
+                        frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :],
+                        cc(b).astype(np.uint8)
+                    )
 
     # draw vertical line: 
     frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = green 
