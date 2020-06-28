@@ -19,8 +19,8 @@ players = {
     'v2':'Violino Concertante II',
     'tn':'Tenore',
     'cl':'Cello',
-    'pl':'Organ Left',
     'pr':'Organ Right',
+    'pl':'Organ Left',
 }
 
 def read_midi(filenm, ticks_per_beat=384, beats_in_anacrusis=0):

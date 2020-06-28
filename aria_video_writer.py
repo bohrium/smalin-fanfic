@@ -20,7 +20,7 @@ notes_by_player = read_midi('music/bach.007.04.mid')
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 24.0
-DURATION =  80.0
+DURATION = 215.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'music/bach.007.04.mp3'
 OUT_NM = 'aria.mp4'
@@ -28,7 +28,7 @@ OUT_NM = 'aria.mp4'
 #
 
 PIXELS_PER_BEAT = 20
-BEAT_RATE = 126.0/60
+BEAT_RATE = 125.2/60
 PIXELS_PER_SEMITONE = 6
 CURVE_SCALE = 100.0
 BEATS_IN_ANACRUSIS = 0
@@ -45,12 +45,16 @@ dt = 0.01
 distortions = np.array((
     (T_MINUS,T_MINUS),
     (     0.0 ,   0.0   ),
-    (    20.0 ,  20.0   ),
-    (    40.0 ,  40.0   ),
-    (    80.0 ,  80.0   ),
-    (   160.0 , 160.0   ),
-    (   240.0 , 240.0   ),
-    (   320.0 , 320.0   ),
+    (    30.0 ,  30.3   ),
+    (    56.0 ,  56.1   ),
+    (    80.0 ,  80.3   ),
+    (    95.0 ,  95.1   ),
+    (   113.0 , 113.1   ),
+    (   135.4 , 135.0   ),
+    (   155.4 , 155.0   ),
+    (   175.3 , 175.0   ),
+    (   210.0 , 210.1   ),
+    (   225.0 , 225.0   ),
 ))
 linear_interp = np.interp(np.arange(T_MINUS, DURATION, dt), distortions[:,0], distortions[:,1]) 
 
@@ -69,42 +73,42 @@ purple  = np.array([192,  64, 128])
 colors_by_player = {
     'v1': yellow,
     'v2': orange,
-    'cl': red,
     'tn': green,
-    'pl': blue, 
-    'pr': purple,
+    'pr': blue,
+    'pl': purple, 
+    'cl': red,
 }
 octave_offset_by_player = {
     'v1': 1,
     'v2': 1,
-    'cl': 0,
     'tn': 0,
-    'pl': -2,
-    'pr': -3,
+    'pr':-1, 
+    'pl':-1, 
+    'cl':-1,
 }
 thickness_by_player = {
     'v1': 0.7,
     'v2': 0.7,
-    'cl': 0.7,
     'tn': 1.6,
-    'pl': 1.0,
     'pr': 1.0,
+    'pl': 1.0,
+    'cl': 0.7,
 }
 curve_intensity_by_player = {
     'v1': 1.0,
     'v2': 1.0,
-    'cl': 1.0,
     'tn': 3.0,
-    'pl': 0.0,
     'pr': 0.0,
+    'pl': 0.0,
+    'cl': 1.0,
 }
 narrowness_by_player = {
-    'v1':10.0,
-    'v2':10.0,
-    'cl':10.0,
+    'v1': 7.0,
+    'v2': 7.0,
     'tn': 1.0,
-    'pl':10.0,
-    'pr':10.0,
+    'pr':30.0,
+    'pl': 7.0,
+    'cl':30.0,
 }
 
 def height_from_pitch(pitch):
@@ -138,17 +142,14 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     frame = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
     time = frame_nb/float(FRAME_RATE) - START_TIME
 
-    frame = cv2.putText(img=frame, text='real time {:.2f}'.format(time),
-            org=(10,40), fontFace=0, fontScale=1,
-            color=(64,64,64), thickness=1)
-
-    frame = cv2.putText(img=frame, text='anim time {:.2f}'.format(anim_time(time)),
-            org=(10,80), fontFace=0, fontScale=1,
-            color=(64,64,64), thickness=1)
-
-    frame = cv2.putText(img=frame, text='beat {:.2f}'.format(beat_from_width(frame_nb, WIDTH//2)),
-            org=(10,120), fontFace=0, fontScale=1,
-            color=(64,64,64), thickness=1)
+    for pos, string in {
+         40: 'real time {:.2f}'.format(time),
+         80: 'anim time {:.2f}'.format(anim_time(time)),
+        120: 'beat {:.2f}'.format(beat_from_width(frame_nb, WIDTH//2)),
+    }.items(): 
+        frame = cv2.putText(text=string,
+                            img=frame, org=(10,pos), thickness=1,
+                            fontFace=0, fontScale=1, color=(64,64,64))
 
     # draw moving box: 
     for p in ('pr', 'pl', 'cl', 'v1', 'v2', 'tn'):
