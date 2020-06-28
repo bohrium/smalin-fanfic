@@ -195,14 +195,22 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
             # harmonic:
             cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
 
-            # fuzzy rectangle:
-            for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
+            # hollow rectangle:
+            for g,b in [(1.0,1.0), (0.8,0.75), (0.7,0.5), (0.6, 0.25), (0.5,0.0)]:
                 w_mid = (w_end + w_start)/2.0
                 w_dif = (w_end - w_start)/2.0
-                frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = np.maximum(
-                    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :],
+                frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
                     cc(b).astype(np.uint8)
                 )
+
+            ## fuzzy rectangle:
+            #for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
+            #    w_mid = (w_end + w_start)/2.0
+            #    w_dif = (w_end - w_start)/2.0
+            #    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = np.maximum(
+            #        frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :],
+            #        cc(b).astype(np.uint8)
+            #    )
 
     # draw vertical line: 
     frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = green 
