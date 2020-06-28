@@ -27,7 +27,7 @@ OUT_NM = 'aria.mp4'
 
 #
 
-PIXELS_PER_BEAT = 20
+PIXELS_PER_BEAT = 40
 BEAT_RATE = 125.2/60
 PIXELS_PER_SEMITONE = 6
 CURVE_SCALE = 100.0
@@ -49,6 +49,7 @@ distortions = np.array((
     (    56.0 ,  56.1   ),
     (    80.0 ,  80.3   ),
     (    95.0 ,  95.1   ),
+    (    99.0 ,  99.2   ),
     (   113.0 , 113.1   ),
     (   135.4 , 135.0   ),
     (   155.4 , 155.0   ),
@@ -64,11 +65,31 @@ def anim_time(t):
 
                     #B   #G   #R
 red     = np.array([  0,   0, 255])
+red_    = np.array([  0,  32, 255])
 orange  = np.array([  0,  64, 255])
+orange_ = np.array([  0,  96, 224])
 yellow  = np.array([  0, 128, 192])
+yellow_ = np.array([ 32, 160, 128])
 green   = np.array([ 64, 192,  64])
+green_  = np.array([128, 128,  64])
 blue    = np.array([192,  64,  64])
+blue_   = np.array([192,  64,  96])
 purple  = np.array([192,  64, 128])
+purple_ = np.array([ 96,  32, 192])
+
+colors = [red     ,
+          red_    ,
+          orange  ,
+          orange_ ,
+          yellow  ,
+          yellow_ ,
+          green   ,
+          green_  ,
+          blue    ,
+          blue_   ,
+          purple  ,
+          purple_ , 
+]
 
 colors_by_player = {
     'v1': yellow,
@@ -82,9 +103,9 @@ octave_offset_by_player = {
     'v1': 1,
     'v2': 1,
     'tn': 0,
-    'pr':-1, 
-    'pl':-1, 
-    'cl':-1,
+    'pr':-2, 
+    'pl':-3, 
+    'cl':-3,
 }
 thickness_by_player = {
     'v1': 0.7,
@@ -99,7 +120,7 @@ curve_intensity_by_player = {
     'v2': 1.0,
     'tn': 3.0,
     'pr': 0.0,
-    'pl': 0.0,
+    'pl':-0.5,
     'cl': 1.0,
 }
 narrowness_by_player = {
@@ -148,7 +169,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
         120: 'beat {:.2f}'.format(beat_from_width(frame_nb, WIDTH//2)),
     }.items(): 
         frame = cv2.putText(text=string,
-                            img=frame, org=(10,pos), thickness=1,
+                            img=frame, org=(10,pos), thickness=2,  
                             fontFace=0, fontScale=1, color=(64,64,64))
 
     # draw moving box: 
@@ -169,7 +190,8 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                 brightness = 1.3
             hh = int(thickness_by_player[p] * PIXELS_PER_SEMITONE)
             frame[h-hh:h+hh, w_start:w_end , :] = (
-                np.minimum(255, colors_by_player[p] * brightness)
+                #np.minimum(255, colors_by_player[p] * brightness)
+                np.minimum(255, colors[(note.pitch*5)%12] * brightness)
             ).astype(np.uint8)
 
 
