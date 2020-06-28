@@ -195,18 +195,31 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
             # harmonic:
             cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
 
-            # growing rectangle:
+            # popping rectangle:
             for g,b in [(1.0,0.8), (0.8,1.0)]:
                 w_mid = (w_end + w_start)/2.0
                 w_dif = (w_end - w_start)/2.0
 
-                g *= max(0.2, min(1.0, 0.5*PIXELS_PER_BEAT/(
-                    0.1+abs(w_start-WIDTH//2)
-                )) if w_start < WIDTH//2 else 0.2)
+                g *= max(0.2 if w_mid < WIDTH//2 else 1.0,
+                    min(1.0, 0.5*PIXELS_PER_BEAT/(0.1+abs(w_mid-WIDTH//2)))
+                )
 
                 frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
                     cc(b).astype(np.uint8)
                 )
+
+            ## galloping rectangle:
+            #for g,b in [(1.0,0.8), (0.8,1.0)]:
+            #    w_mid = (w_end + w_start)/2.0
+            #    w_dif = (w_end - w_start)/2.0
+
+            #    g *= max(0.2, min(1.0, 0.5*PIXELS_PER_BEAT/(
+            #        0.1+abs(w_start-WIDTH//2)
+            #    )) if w_start < WIDTH//2 else 0.2)
+
+            #    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
+            #        cc(b).astype(np.uint8)
+            #    )
 
             ## hollow rectangle:
             #for g,b in [(1.0,1.0), (0.8,0.75), (0.7,0.5), (0.6, 0.25), (0.5,0.0)]:
