@@ -22,7 +22,7 @@ notes_by_player = read_midi('music/bach.007.04.mid')
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 24.0
-DURATION = 60#215.0
+DURATION = 20#215.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'music/bach.007.04.mp3'
 OUT_NM = 'aria.mp4'
@@ -126,12 +126,12 @@ curve_intensity_by_player = {
     'cl': 1.0,
 }
 narrowness_by_player = {
-    'v1': 7.0,
-    'v2': 7.0,
+    'v1': 5.0,
+    'v2': 5.0,
     'tn': 1.0,
-    'pr':30.0,
-    'pl': 7.0,
-    'cl':30.0,
+    'pr':25.0,
+    'pl': 5.0,
+    'cl':25.0,
 }
 
 def height_from_pitch(pitch):
@@ -205,8 +205,9 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
             if p in ('tn',):
                 # lilting:
-                try:
-                    for t in list(np.arange(0.0, 1.01, 0.2 ))+list(np.sqrt(np.arange(0.5, 1.01, 0.2 ))):
+                #try:
+                for g,b in [(1.0,0.8), (0.8,1.0)]:
+                    for t in list(np.arange(0.0, 1.01, 0.04))+list(np.sqrt(np.arange(0.5, 1.01, 0.04))):
                         fac = 1.0-max(0.0, min(1.0,
                             0.5*(note.end_beat - note.start_beat)*
                             PIXELS_PER_BEAT/(0.1+abs(w_end-WIDTH//2))
@@ -221,19 +222,40 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         ))
 
                         tt = frame_nb/30.0
-                        dd = (2.0-fac_b) * (8.5 + np.sin(2*3.14159 * tt) - np.sin(2*3.14159 * 3*tt))
+                        dd = 0.5 * (2.0-fac_b) * 6.0 #* (8.5 + np.sin(2*3.14159 * tt) - np.sin(2*3.14159 * 3*tt))
 
-                        h2 = height_from_pitch(next_note.pitch + 12 * octave_offset_by_player[p]) if next_note is not None else h
+                        if next_note is not None and next_note.start_beat < 0.25 + note.end_beat: 
+                            h2 = height_from_pitch(next_note.pitch + 12 * octave_offset_by_player[p])
+                        else:
+                            h2 = h
+
                         h_start = h
                         h_ran = h2-h
 
-                        rrr, ccc = circle(int(h_start+(0.1*fac*t + (1-fac)*t*t*t)*h_ran), int(w_start+t*w_ran), int(dd))
-                        frame[rrr, ccc, :] = cc(1.0).astype(np.uint8)
-                except:
-                    pass
+                        #rrr, ccc = circle(int(h_start+(0.1*fac*t + (1-fac)*t*t*t)*h_ran), int(w_start+t*w_ran), int(dd))
+                        #frame[rrr, ccc, :] = cc(1.0).astype(np.uint8)
+
+                        frame[
+                            int(h_start+(0.1*fac*t + (1-fac)*t*t*t)*h_ran-g*dd):int(h_start+(0.1*fac*t + (1-fac)*t*t*t)*h_ran+g*dd),
+                            int(w_start+dd+t*(w_ran-2*dd)-g*dd):int(w_start+dd+t*(w_ran-2*dd)+g*dd),
+                            :
+                        ] = cc(b).astype(np.uint8)
+                #except:
+                #    pass
 
 
-            if p in ('v1', 'v2'):
+            if p in ('v1',):
+                # appearing rectangle:
+                if True:#w_start < WIDTH//2:
+                    for g,b in [(1.0,0.8), (0.8,1.0)]:
+                        w_mid = (w_end + w_start)/2.0
+                        w_dif = (w_end - w_start)/2.0
+
+                        frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
+                            cc(b).astype(np.uint8)
+                        )
+
+            if p in ('v2',):
                 # galloping rectangle:
                 for g,b in [(1.0,0.8), (0.8,1.0)]:
                     w_mid = (w_end + w_start)/2.0
@@ -241,7 +263,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
                     g *= max(0.4, min(1.0, 1.5*(note.end_beat - note.start_beat)*PIXELS_PER_BEAT/(
                         0.1+abs(w_start-WIDTH//2)
-                    )) if w_start < WIDTH//2 else 0.0)
+                    )) if w_start < WIDTH//2 else 0.4)
 
                     frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
                         cc(b).astype(np.uint8)
