@@ -1,5 +1,5 @@
 ''' author: samtenka
-    change: 2020-06-28
+    change: 2020-06-29
     create: 2019-08-31
     descrp: create audio/video pairing by following posts from
                 @enriqueav      medium.com/@enriqueav/881b18e41397
@@ -14,13 +14,15 @@ import sys
 import os 
 from audio_reader import get_pressures 
 
+from skimage.draw import circle
+
 from read_aria import read_midi 
 notes_by_player = read_midi('music/bach.007.04.mid')
 
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 24.0
-DURATION = 20#215.0
+DURATION = 60#215.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'music/bach.007.04.mp3'
 OUT_NM = 'aria.mp4'
@@ -174,7 +176,11 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
     # draw moving box: 
     for p in ('pr', 'pl', 'cl', 'v1', 'v2', 'tn'):
-        for note in notes_by_player[p][first_active_note_idx_by_player[p]:]:
+        relevant_notes = notes_by_player[p][first_active_note_idx_by_player[p]:]
+        for ii in range(len(relevant_notes)):
+            note = relevant_notes[ii]
+            next_note = relevant_notes[ii+1] if ii+1<len(relevant_notes) else None
+
             w_start = width_from_beat(frame_nb, note.start_beat, curve_intensity_by_player[p])
             w_end   = width_from_beat(frame_nb, note.end_beat, curve_intensity_by_player[p])
             if not (0 <= w_start):
@@ -192,24 +198,40 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
             ## instrumental:
             #cc = lambda b: np.minimum(255, colors_by_player[p] * brightness)
-            ## harmonic:
-            #cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
-            # brightness:
-            cc = lambda b: np.minimum(255, colors[(note.pitch)%12] * brightness * b)
+            # harmonic:
+            cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
+            ## brightness:
+            #cc = lambda b: np.minimum(255, colors[(note.pitch)%12] * brightness * b)
 
-            #if p in ('v2',):
-            #    # popping rectangle:
-            #    for g,b in [(1.0,0.8), (0.8,1.0)]:
-            #        w_mid = (w_end + w_start)/2.0
-            #        w_dif = (w_end - w_start)/2.0
+            if p in ('tn',):
+                # lilting:
+                try:
+                    for t in list(np.arange(0.0, 1.01, 0.2 ))+list(np.sqrt(np.arange(0.5, 1.01, 0.2 ))):
+                        fac = 1.0-max(0.0, min(1.0,
+                            0.5*(note.end_beat - note.start_beat)*
+                            PIXELS_PER_BEAT/(0.1+abs(w_end-WIDTH//2))
+                            if w_start < WIDTH//2 else 0.0
+                        ))
 
-            #        g *= max(0.4 if w_mid < WIDTH//2 else 1.0,
-            #            min(1.0, 0.5*PIXELS_PER_BEAT/(0.1+abs(w_mid-WIDTH//2)))
-            #        )
+                        w_ran = (w_end - w_start)
 
-            #        frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
-            #            cc(b).astype(np.uint8)
-            #        )
+                        fac_b = max(0.0, min(1.0,
+                            0.5*(note.end_beat - note.start_beat)*
+                            PIXELS_PER_BEAT/(0.1+abs(w_start+t*w_ran-WIDTH//2))
+                        ))
+
+                        tt = frame_nb/30.0
+                        dd = (2.0-fac_b) * (8.5 + np.sin(2*3.14159 * tt) - np.sin(2*3.14159 * 3*tt))
+
+                        h2 = height_from_pitch(next_note.pitch + 12 * octave_offset_by_player[p]) if next_note is not None else h
+                        h_start = h
+                        h_ran = h2-h
+
+                        rrr, ccc = circle(int(h_start+(0.1*fac*t + (1-fac)*t*t*t)*h_ran), int(w_start+t*w_ran), int(dd))
+                        frame[rrr, ccc, :] = cc(1.0).astype(np.uint8)
+                except:
+                    pass
+
 
             if p in ('v1', 'v2'):
                 # galloping rectangle:
@@ -217,17 +239,17 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                     w_mid = (w_end + w_start)/2.0
                     w_dif = (w_end - w_start)/2.0
 
-                    g *= max(0.4, min(1.0, 0.5*PIXELS_PER_BEAT/(
+                    g *= max(0.4, min(1.0, 1.5*(note.end_beat - note.start_beat)*PIXELS_PER_BEAT/(
                         0.1+abs(w_start-WIDTH//2)
-                    )) if w_start < WIDTH//2 else 0.4)
+                    )) if w_start < WIDTH//2 else 0.0)
 
                     frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ('pr', 'tn'):
+            if p in ('pr',):
                 # hollow rectangle:
-                for g,b in [(1.0,1.0), (0.8,0.75), (0.7,0.5), (0.6, 0.25), (0.5,0.0)]:
+                for g,b in [(1.0,1.0), (0.85,0.75), (0.7,0.5), (0.55, 0.25), (0.4,0.0)]:
                     w_mid = (w_end + w_start)/2.0
                     w_dif = (w_end - w_start)/2.0
                     frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
