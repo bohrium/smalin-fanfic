@@ -61,9 +61,25 @@ distortions = np.array((
 ))
 linear_interp = np.interp(np.arange(T_MINUS, DURATION, dt), distortions[:,0], distortions[:,1]) 
 
+#   seem beats, phys beats
+B_MINUS = -1.0
+db = 0.01
+distortions_v1 = np.array((
+    (B_MINUS  , B_MINUS ),
+    (     0.0 ,   0.0   ),
+    (     1.0 ,   1.2   ),
+    (   300.0 , 300.0   ),
+    (   600.0 , 600.0   ),
+))
+linear_interp_v1 = np.interp(np.arange(B_MINUS, 2*DURATION*BEAT_RATE, db), distortions_v1[:,0], distortions_v1[:,1]) 
+
 def anim_time(t):
     quot = int((t-T_MINUS)/dt)
     return linear_interp[quot] + (t-T_MINUS - quot*dt)
+
+def phys_beat(b):
+    quot = int(float(b-B_MINUS)/db)
+    return float(linear_interp_v1[quot] + (b-B_MINUS - quot*db)*(linear_interp_v1[quot+1]-linear_interp_v1[quot]))
 
                     #B   #G   #R
 red     = np.array([  0,   0, 255])
@@ -177,11 +193,11 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     # draw moving box: 
     for p in ('pr', 'pl', 'cl', 'v1', 'v2', 'tn'):
         relevant_notes = notes_by_player[p][first_active_note_idx_by_player[p]:]
-        for db in range(-10, +10):
+        for ddb in range(-10, +10):
             b = int(beat_from_width(frame_nb, WIDTH//2))
-            w = width_from_beat(frame_nb, b+db, curve_intensity_by_player[p])
+            w = width_from_beat(frame_nb, b+ddb, curve_intensity_by_player[p])
             if 0<=w<WIDTH:
-                dw = 3 if (b+db)%3 == 0 else 1
+                dw = 3 if (b+ddb)%3 == 0 else 1
                 frame[:, w-dw:w+dw , :] = green 
 
         for ii in range(len(relevant_notes)):
@@ -190,6 +206,10 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
             w_start = width_from_beat(frame_nb, note.start_beat, curve_intensity_by_player[p])
             w_end   = width_from_beat(frame_nb, note.end_beat, curve_intensity_by_player[p])
+            if p == 'v1':
+                w_start = width_from_beat(frame_nb, phys_beat(note.start_beat), curve_intensity_by_player[p])
+                w_end   = width_from_beat(frame_nb, phys_beat(note.end_beat), curve_intensity_by_player[p])
+
             if not (0 <= w_start):
                 first_active_note_idx_by_player[p] += 1
                 continue
@@ -251,7 +271,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                 #    pass
 
 
-            if p in ('v1',):
+            if p in ('v1', 'v2'):
                 # appearing rectangle:
                 if w_start < WIDTH//2:
                     for g,b in [(1.0,0.8), (0.8,1.0)]:
@@ -262,7 +282,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                             cc(b).astype(np.uint8)
                         )
 
-            if p in ('v2',):
+            if p in ():
                 # galloping rectangle:
                 for g,b in [(1.0,0.8), (0.8,1.0)]:
                     w_mid = (w_end + w_start)/2.0
@@ -296,7 +316,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                     )
 
     # draw vertical line: 
-    frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = green 
+    frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = purple
 
     video.write(frame)
 
