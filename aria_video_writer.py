@@ -34,7 +34,7 @@ BEAT_RATE = 125.2/60
 PIXELS_PER_SEMITONE = 6
 CURVE_SCALE = 100.0
 BEATS_IN_ANACRUSIS = 0
-START_TIME = 1.25
+START_TIME = 1.20
 
 #
 
@@ -67,11 +67,29 @@ db = 0.01
 distortions_v1 = np.array((
     (B_MINUS  , B_MINUS ),
     (     0.0 ,   0.0   ),
-    (     1.0 ,   1.2   ),
-    (   300.0 , 300.0   ),
-    (   600.0 , 600.0   ),
+    (     0.67,   0.60  ),
+    (     1.0 ,   1.0   ),
+    (     1.67,   1.63  ),
+    (     2.0 ,   2.0   ),
+    (     2.33,   2.27  ),
+    (     3.33,   3.27  ),
+    (     6.0 ,   5.9   ),
+    (     8.0 ,   7.95  ),
+    (     9.0 ,   8.9   ),
+    (    10.0 ,   9.9   ),
+    (    11.0 ,  11.0   ),
+    (    12.0 ,  11.9   ),
+    (    15.0 ,  14.95  ),
+    (    17.0 ,  17.05  ),
+    (    19.0 ,  18.95  ),
+    (    33.0 ,  32.95  ),
+    (    33.67,  33.57  ),
+    (    34.33,  34.40  ),
+    (    35.33,  35.27  ),
+    (    37.33,  37.40  ),
+    (   100.0 , 100.0   ),
 ))
-linear_interp_v1 = np.interp(np.arange(B_MINUS, 2*DURATION*BEAT_RATE, db), distortions_v1[:,0], distortions_v1[:,1]) 
+linear_interp_v1 = np.interp(np.arange(B_MINUS, 5*DURATION*BEAT_RATE, db), distortions_v1[:,0], distortions_v1[:,1]) 
 
 def anim_time(t):
     quot = int((t-T_MINUS)/dt)
@@ -127,7 +145,7 @@ octave_offset_by_player = {
 }
 thickness_by_player = {
     'v1': 0.7,
-    'v2': 0.7,
+    'v2': 0.3,
     'tn': 1.6,
     'pr': 1.0,
     'pl': 1.0,
