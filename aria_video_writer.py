@@ -29,7 +29,7 @@ OUT_NM = 'aria.mp4'
 
 #
 
-PIXELS_PER_BEAT = 40
+PIXELS_PER_BEAT = 120#40
 BEAT_RATE = 125.2/60
 PIXELS_PER_SEMITONE = 6
 CURVE_SCALE = 100.0
@@ -118,20 +118,20 @@ thickness_by_player = {
     'cl': 0.7,
 }
 curve_intensity_by_player = {
-    'v1': 1.0,
-    'v2': 1.0,
-    'tn': 3.0,
-    'pr': 0.0,
-    'pl':-0.5,
-    'cl': 1.0,
+    'v1': 0.0,# 1.0,
+    'v2': 0.0,# 1.0,
+    'tn': 0.0,# 3.0,
+    'pr': 0.0,# 0.0,
+    'pl': 0.0,#-0.5,
+    'cl': 0.0,# 1.0,
 }
 narrowness_by_player = {
-    'v1': 5.0,
-    'v2': 5.0,
-    'tn': 1.0,
-    'pr':25.0,
-    'pl': 5.0,
-    'cl':25.0,
+    'v1':1.0,# 5.0,
+    'v2':1.0,# 5.0,
+    'tn':1.0,# 1.0,
+    'pr':1.0,#25.0,
+    'pl':1.0,# 5.0,
+    'cl':1.0,#25.0,
 }
 
 def height_from_pitch(pitch):
@@ -177,6 +177,13 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     # draw moving box: 
     for p in ('pr', 'pl', 'cl', 'v1', 'v2', 'tn'):
         relevant_notes = notes_by_player[p][first_active_note_idx_by_player[p]:]
+        for db in range(-10, +10):
+            b = int(beat_from_width(frame_nb, WIDTH//2))
+            w = width_from_beat(frame_nb, b+db, curve_intensity_by_player[p])
+            if 0<=w<WIDTH:
+                dw = 3 if (b+db)%3 == 0 else 1
+                frame[:, w-dw:w+dw , :] = green 
+
         for ii in range(len(relevant_notes)):
             note = relevant_notes[ii]
             next_note = relevant_notes[ii+1] if ii+1<len(relevant_notes) else None
