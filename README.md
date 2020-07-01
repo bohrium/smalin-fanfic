@@ -8,3 +8,7 @@ Install:
     pip3 install tqdm
     pip3 install matplotlib
     pip3 install scipy
+
+Thanks to:
+
+    http://www.suzumidi.com/eng/bach6.htm

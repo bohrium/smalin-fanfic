@@ -246,7 +246,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
             if p in ('v1',):
                 # appearing rectangle:
-                if True:#w_start < WIDTH//2:
+                if w_start < WIDTH//2:
                     for g,b in [(1.0,0.8), (0.8,1.0)]:
                         w_mid = (w_end + w_start)/2.0
                         w_dif = (w_end - w_start)/2.0
