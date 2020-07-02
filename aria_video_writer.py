@@ -22,7 +22,7 @@ notes_by_player = read_midi('music/bach.007.04.mid')
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 24.0
-DURATION = 20#215.0
+DURATION = 10#215.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'music/bach.007.04.mp3'
 OUT_NM = 'aria.mp4'
@@ -34,7 +34,7 @@ BEAT_RATE = 125.2/60
 PIXELS_PER_SEMITONE = 6
 CURVE_SCALE = 100.0
 BEATS_IN_ANACRUSIS = 0
-START_TIME = 1.20
+START_TIME = 1.22
 
 #
 
@@ -64,40 +64,70 @@ linear_interp = np.interp(np.arange(T_MINUS, DURATION, dt), distortions[:,0], di
 #   seem beats, phys beats
 B_MINUS = -1.0
 db = 0.01
-distortions_v1 = np.array((
-    (B_MINUS  , B_MINUS ),
-    (     0.0 ,   0.0   ),
-    (     0.67,   0.60  ),
-    (     1.0 ,   1.0   ),
-    (     1.67,   1.63  ),
-    (     2.0 ,   2.0   ),
-    (     2.33,   2.27  ),
-    (     3.33,   3.27  ),
-    (     6.0 ,   5.9   ),
-    (     8.0 ,   7.95  ),
-    (     9.0 ,   8.9   ),
-    (    10.0 ,   9.9   ),
-    (    11.0 ,  11.0   ),
-    (    12.0 ,  11.9   ),
-    (    15.0 ,  14.95  ),
-    (    17.0 ,  17.05  ),
-    (    19.0 ,  18.95  ),
-    (    33.0 ,  32.95  ),
-    (    33.67,  33.57  ),
-    (    34.33,  34.40  ),
-    (    35.33,  35.27  ),
-    (    37.33,  37.40  ),
-    (   100.0 , 100.0   ),
-))
-linear_interp_v1 = np.interp(np.arange(B_MINUS, 5*DURATION*BEAT_RATE, db), distortions_v1[:,0], distortions_v1[:,1]) 
+beat_distortions = {
+    'tn':np.array(((B_MINUS  , B_MINUS ), (100.0, 100.0))),
+    'cl':np.array((
+        (B_MINUS,B_MINUS),
+        (   0.0 ,   0.0 ),
+        (   2.0 ,   1.9 ),
+        (   3.0 ,   2.95),
+        (   4.0 ,   4.05),
+        (   5.0 ,   5.00),
+        (   6.0 ,   6.0 ),
+        (   7.67,   7.70),
+        (  10.0 ,  10.0 ),
+        (  11.0 ,  10.9 ),
+        (  14.0 ,  14.0 ),
+        (  14.67,  14.75),
+        (  15.0 ,  15.0 ),
+        (  17.0 ,  16.9 ),
+        (  28.0 ,  28.0 ),
+        (  29.0 ,  28.9 ),
+        (  37.67,  37.50),
+        ( 100.0 , 100.0 ),
+    )),
+    'v1':np.array((
+        (B_MINUS  , B_MINUS ),
+        (     0.0 ,   0.0   -0.03),
+        (     0.67,   0.60  -0.03),
+        (     1.0 ,   1.0   -0.03),
+        (     1.67,   1.63  -0.03),
+        (     2.0 ,   2.0   -0.03),
+        (     2.33,   2.27  -0.03),
+        (     3.33,   3.27  -0.03),
+        (     6.0 ,   5.95  -0.03),
+        (     8.0 ,   7.95  -0.03),
+        (     9.0 ,   8.9   -0.03),
+        (    10.0 ,   9.9   -0.03),
+        (    12.0 ,  11.9   -0.03),
+        (    15.0 ,  14.95  -0.03),
+        (    17.0 ,  17.05  -0.03),
+        (    17.33,  17.40  -0.03),
+        (    17.67,  17.60  -0.03),
+        (    19.0 ,  18.95  -0.03),
+        (    33.0 ,  32.95  -0.03),
+        (    33.67,  33.57  -0.03),
+        (    34.33,  34.40  -0.03),
+        (    35.33,  35.27  -0.03),
+        (    37.33,  37.40  -0.03),
+        (   100.0 , 100.0   -0.03),
+    )),
+}
+beat_distortions['pr'] = beat_distortions['cl']
+beat_distortions['pl'] = beat_distortions['cl']
+beat_distortions['v2'] = beat_distortions['v1']
+beat_linear_interp = {
+    k:np.interp(np.arange(B_MINUS, 5*DURATION*BEAT_RATE, db), v[:,0], v[:,1]) 
+    for k,v in beat_distortions.items()
+}
 
 def anim_time(t):
     quot = int((t-T_MINUS)/dt)
     return linear_interp[quot] + (t-T_MINUS - quot*dt)
 
-def phys_beat(b):
+def phys_beat(b,p):
     quot = int(float(b-B_MINUS)/db)
-    return float(linear_interp_v1[quot] + (b-B_MINUS - quot*db)*(linear_interp_v1[quot+1]-linear_interp_v1[quot]))
+    return float(beat_linear_interp[p][quot] + (b-B_MINUS - quot*db)*(beat_linear_interp[p][quot+1]-beat_linear_interp[p][quot]))
 
                     #B   #G   #R
 red     = np.array([  0,   0, 255])
@@ -111,7 +141,7 @@ green_  = np.array([128, 128,  64])
 blue    = np.array([192,  64,  64])
 blue_   = np.array([192,  64,  96])
 purple  = np.array([192,  64, 128])
-purple_ = np.array([ 96,  32, 192])
+purple_ = np.array([108,  48, 212])
 
 colors = [red     ,
           red_    ,
@@ -215,18 +245,15 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
             b = int(beat_from_width(frame_nb, WIDTH//2))
             w = width_from_beat(frame_nb, b+ddb, curve_intensity_by_player[p])
             if 0<=w<WIDTH:
-                dw = 3 if (b+ddb)%3 == 0 else 1
+                dw = 3 if (b+ddb)%3 == 0 else 0
                 frame[:, w-dw:w+dw , :] = green 
 
         for ii in range(len(relevant_notes)):
             note = relevant_notes[ii]
             next_note = relevant_notes[ii+1] if ii+1<len(relevant_notes) else None
 
-            w_start = width_from_beat(frame_nb, note.start_beat, curve_intensity_by_player[p])
-            w_end   = width_from_beat(frame_nb, note.end_beat, curve_intensity_by_player[p])
-            if p == 'v1':
-                w_start = width_from_beat(frame_nb, phys_beat(note.start_beat), curve_intensity_by_player[p])
-                w_end   = width_from_beat(frame_nb, phys_beat(note.end_beat), curve_intensity_by_player[p])
+            w_start = width_from_beat(frame_nb, phys_beat(note.start_beat, p), curve_intensity_by_player[p])
+            w_end   = width_from_beat(frame_nb, phys_beat(note.end_beat  , p), curve_intensity_by_player[p])
 
             if not (0 <= w_start):
                 first_active_note_idx_by_player[p] += 1
@@ -291,7 +318,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
             if p in ('v1', 'v2'):
                 # appearing rectangle:
-                if w_start < WIDTH//2:
+                if True:#w_start < WIDTH//2:
                     for g,b in [(1.0,0.8), (0.8,1.0)]:
                         w_mid = (w_end + w_start)/2.0
                         w_dif = (w_end - w_start)/2.0
@@ -314,7 +341,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ('pr',):
+            if p in ('pr','pl', 'cl'):
                 # hollow rectangle:
                 for g,b in [(1.0,1.0), (0.85,0.75), (0.7,0.5), (0.55, 0.25), (0.4,0.0)]:
                     w_mid = (w_end + w_start)/2.0
@@ -323,7 +350,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ('pl', 'cl'):
+            if p in ():
                 # fuzzy rectangle:
                 for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
                     w_mid = (w_end + w_start)/2.0
@@ -334,7 +361,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                     )
 
     # draw vertical line: 
-    frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = purple
+    #frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = purple
 
     video.write(frame)
 
