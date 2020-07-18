@@ -21,10 +21,12 @@ notes_by_player = read_midi('music/bach.007.04.mid')
 
 WIDTH =  1280
 HEIGHT = 720
-FRAME_RATE = 24.0
-DURATION = 80#215.0
+FRAME_RATE = 18.0#24.0
+DURATION = 30#215.0
+MAX_DUR = 215.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'music/bach.007.04.mp3'
+CLP_NM = 'clip.mp3'
 OUT_NM = 'aria.mp4'
 
 #
@@ -35,6 +37,10 @@ PIXELS_PER_SEMITONE = 7
 CURVE_SCALE = 100.0
 BEATS_IN_ANACRUSIS = 0
 START_TIME = 1.22
+
+#
+
+ANIMATE_FROM = 10.0#-START_TIME#10.0
 
 #
 
@@ -59,7 +65,7 @@ distortions = np.array((
     (   210.0 , 210.1   ),
     (   225.0 , 225.0   ),
 ))
-linear_interp = np.interp(np.arange(T_MINUS, DURATION, dt), distortions[:,0], distortions[:,1]) 
+linear_interp = np.interp(np.arange(T_MINUS, MAX_DUR, dt), distortions[:,0], distortions[:,1]) 
 
 #   seem beats, phys beats
 B_MINUS = -1.0
@@ -149,7 +155,7 @@ beat_distortions['pr'] = beat_distortions['cl']
 beat_distortions['pl'] = beat_distortions['cl']
 beat_distortions['v2'] = beat_distortions['v1']
 beat_linear_interp = {
-    k:np.interp(np.arange(B_MINUS, 5*DURATION*BEAT_RATE, db), v[:,0], v[:,1]) 
+    k:np.interp(np.arange(B_MINUS, 5*MAX_DUR*BEAT_RATE, db), v[:,0], v[:,1]) 
     for k,v in beat_distortions.items()
 }
 
@@ -198,36 +204,36 @@ colors_by_player = {
     'cl': red,
 }
 octave_offset_by_player = {
-    'v1': 0 + 0.5,
-    'v2': 0 + 0.5,
-    'tn':-1 + 0.5,
-    'pr':-5 + 0.5, 
-    'pl':-2 + 0.5, 
-    'cl':-2 + 0.5,
+    'v1': -1, # 0 + 0.5,
+    'v2': -1, # 0 + 0.5,
+    'tn': -1, #-1 + 0.5,
+    'pr': -1, #-5 + 0.5, 
+    'pl': -1, #-2 + 0.5, 
+    'cl': -1, #-2 + 0.5,
 }
 thickness_by_player = {
-    'v1': 0.7,
-    'v2': 0.7,
-    'tn': 1.6,
-    'pr': 1.0,
-    'pl': 1.0,
-    'cl': 0.7,
+    'v1': 1.0, #0.7,
+    'v2': 1.0, #0.7,
+    'tn': 1.0, #1.6,
+    'pr': 1.0, #1.0,
+    'pl': 1.0, #1.0,
+    'cl': 1.0, #0.7,
 }
 curve_intensity_by_player = {
-    'v1':  1.0,#0.0,#
-    'v2':  1.0,#0.0,#
-    'tn':  3.0,#0.0,#
-    'pr':  0.0,#0.0,#
-    'pl': -0.5,#0.0,#
-    'cl':  1.0,#0.0,#
+    'v1': 0.0,# 1.0,#
+    'v2': 0.0,# 1.0,#
+    'tn': 0.0,# 3.0,#
+    'pr': 0.0,# 0.0,#
+    'pl': 0.0,#-0.5,#
+    'cl': 0.0,# 1.0,#
 }
 narrowness_by_player = {
-    'v1': 5.0,#1.0,#
-    'v2': 5.0,#1.0,#
-    'tn': 1.0,#1.0,#
-    'pr':25.0,#1.0,#
-    'pl': 5.0,#1.0,#
-    'cl':25.0,#1.0,#
+    'v1':1.0,# 5.0,#
+    'v2':1.0,# 5.0,#
+    'tn':1.0,# 1.0,#
+    'pr':1.0,#25.0,#
+    'pl':1.0,# 5.0,#
+    'cl':1.0,#25.0,#
 }
 
 def height_from_pitch(pitch):
@@ -257,7 +263,10 @@ def get_power(start, end):
 
 first_active_note_idx_by_player = {p:0 for p in notes_by_player}
 print('GENERATING VIDEO...')
-for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
+
+start_frame = int((min(MAX_DUR, ANIMATE_FROM           ) + START_TIME) * float(FRAME_RATE)) 
+final_frame = int((min(MAX_DUR, ANIMATE_FROM + DURATION) + START_TIME) * float(FRAME_RATE)) 
+for frame_nb in tqdm.tqdm(range(0, final_frame)):#int(FRAME_RATE * DURATION))):
     frame = np.zeros((HEIGHT, WIDTH, 3), dtype=np.uint8)
     time = frame_nb/float(FRAME_RATE) - START_TIME
 
@@ -294,6 +303,8 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
             if not (w_end < WIDTH):
                 break
 
+            if frame_nb < start_frame: continue
+
             h = height_from_pitch(note.pitch + 12 * octave_offset_by_player[p])
             nn = narrowness_by_player[p]
             brightness = 0.7 * min(brightness_from_width(w_start, nn), brightness_from_width(w_end, nn))
@@ -309,7 +320,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
             #cc = lambda b: np.minimum(255, colors[(note.pitch)%12] * brightness * b)
 
             # ordinary rectangle:
-            if p in ():#'v1','v2','pr','pl','cl'):
+            if p in ('v1','v2','pr','pl','cl','tn'):
                 for g,b in [(1.0,1.0)]:
                     w_mid = (w_end + w_start)/2.0
                     w_dif = (w_end - w_start)/2.0
@@ -317,7 +328,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ('tn',):
+            if p in ():
                 # lilting:
                 #try:
                 w_ran = (w_end - w_start)
@@ -369,7 +380,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                             cc(b).astype(np.uint8)
                         )
 
-            if p in ('v1', 'v2'):
+            if p in ():#'v1', 'v2'):
                 # galloping rectangle:
                 for g,b in [(1.0,0.8), (0.8,1.0)]:
                     w_mid = (w_end + w_start)/2.0
@@ -383,7 +394,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ('pr',):
+            if p in ():#'pr',):
                 # hollow rectangle:
                 for g,b in [(1.0,1.0), (0.85,0.75), (0.7,0.5), (0.55, 0.25), (0.4,0.0)]:
                     w_mid = (w_end + w_start)/2.0
@@ -392,7 +403,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ('pl', 'cl'):
+            if p in ():#'pl', 'cl'):
                 # fuzzy rectangle:
                 for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
                     w_mid = (w_end + w_start)/2.0
@@ -405,11 +416,17 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     # draw vertical line: 
     #frame[:, (WIDTH//2 - 1):(WIDTH//2 + 1) , :] = purple
 
+    if frame_nb < start_frame: continue
     video.write(frame)
 
 video.release()
 
+print('CLIPPING AUDIO...')
+os.system('ffmpeg -y -loglevel quiet -stats -ss {:.3f} -t {:.3f} -i {} {}'.format(
+    ANIMATE_FROM+START_TIME, DURATION, AUD_NM, CLP_NM 
+))
+
 print('PAIRING with AUDIO...')
-os.system('ffmpeg -i {} -i {} -shortest -strict -2 {}'.format(
-    VID_NM, AUD_NM, OUT_NM 
+os.system('ffmpeg -y -loglevel quiet -stats -i {} -i {} -shortest -strict -2 {}'.format(
+    VID_NM, CLP_NM, OUT_NM 
 ))
