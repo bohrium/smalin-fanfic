@@ -22,16 +22,16 @@ notes_by_player = read_midi('music/bach.007.04.mid')
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 24.0
-DURATION = 10#215.0
+DURATION = 80#215.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'music/bach.007.04.mp3'
 OUT_NM = 'aria.mp4'
 
 #
 
-PIXELS_PER_BEAT = 120#40
+PIXELS_PER_BEAT = 60
 BEAT_RATE = 125.2/60
-PIXELS_PER_SEMITONE = 6
+PIXELS_PER_SEMITONE = 7
 CURVE_SCALE = 100.0
 BEATS_IN_ANACRUSIS = 0
 START_TIME = 1.22
@@ -65,52 +65,84 @@ linear_interp = np.interp(np.arange(T_MINUS, DURATION, dt), distortions[:,0], di
 B_MINUS = -1.0
 db = 0.01
 beat_distortions = {
-    'tn':np.array(((B_MINUS  , B_MINUS ), (100.0, 100.0))),
+    'tn':np.array((
+        (B_MINUS, B_MINUS),
+        (  72.0 ,   71.85),
+        (  75.75,   75.95),
+        (  90.0 ,   89.80),
+        ( 108.0 ,  107.85),
+        ( 108.67,  108.85),
+        ( 109.5 ,  109.15),
+        ( 111.67,  111.8 ),
+        ( 112.5 ,  112.15),
+        ( 115.0 ,  114.9 ),
+        ( 117.0 ,  116.9 ),
+        ( 117.67,  117.8 ),
+        ( 118.5 ,  118.15),
+        ( 120.0 ,  119.85),
+        (1000.0 , 1000.0 )
+    )),
     'cl':np.array((
-        (B_MINUS,B_MINUS),
-        (   0.0 ,   0.0 ),
-        (   2.0 ,   1.9 ),
-        (   3.0 ,   2.95),
-        (   4.0 ,   4.05),
-        (   5.0 ,   5.00),
-        (   6.0 ,   6.0 ),
-        (   7.67,   7.70),
-        (  10.0 ,  10.0 ),
-        (  11.0 ,  10.9 ),
-        (  14.0 ,  14.0 ),
-        (  14.67,  14.75),
-        (  15.0 ,  15.0 ),
-        (  17.0 ,  16.9 ),
-        (  28.0 ,  28.0 ),
-        (  29.0 ,  28.9 ),
-        (  37.67,  37.50),
-        ( 100.0 , 100.0 ),
+        (B_MINUS, B_MINUS),
+        (   0.0 ,    0.0 ),
+        (   2.0 ,    1.9 ),
+        (   3.0 ,    2.95),
+        (   4.0 ,    4.05),
+        (   5.0 ,    5.00),
+        (   6.0 ,    6.0 ),
+        (   7.67,    7.70),
+        (  10.0 ,   10.0 ),
+        (  11.0 ,   10.9 ),
+        (  14.0 ,   14.0 ),
+        (  14.67,   14.75),
+        (  15.0 ,   15.0 ),
+        (  17.0 ,   16.9 ),
+        (  28.0 ,   28.0 ),
+        (  29.0 ,   28.9 ),
+        (  37.67,   37.50),
+        (  57.67,   57.85),
+        (  89.0 ,   88.95),
+        ( 146.0 ,  145.9 ),
+        ( 1000.0, 1000.0 ),
     )),
     'v1':np.array((
-        (B_MINUS  , B_MINUS ),
-        (     0.0 ,   0.0   -0.03),
-        (     0.67,   0.60  -0.03),
-        (     1.0 ,   1.0   -0.03),
-        (     1.67,   1.63  -0.03),
-        (     2.0 ,   2.0   -0.03),
-        (     2.33,   2.27  -0.03),
-        (     3.33,   3.27  -0.03),
-        (     6.0 ,   5.95  -0.03),
-        (     8.0 ,   7.95  -0.03),
-        (     9.0 ,   8.9   -0.03),
-        (    10.0 ,   9.9   -0.03),
-        (    12.0 ,  11.9   -0.03),
-        (    15.0 ,  14.95  -0.03),
-        (    17.0 ,  17.05  -0.03),
-        (    17.33,  17.40  -0.03),
-        (    17.67,  17.60  -0.03),
-        (    19.0 ,  18.95  -0.03),
-        (    33.0 ,  32.95  -0.03),
-        (    33.67,  33.57  -0.03),
-        (    34.33,  34.40  -0.03),
-        (    35.33,  35.27  -0.03),
-        (    37.33,  37.40  -0.03),
-        (   100.0 , 100.0   -0.03),
+        (B_MINUS, B_MINUS      ),
+        (   0.0 ,    0.0  -0.03),
+        (   0.67,    0.60 -0.03),
+        (   1.0 ,    1.0  -0.03),
+        (   1.67,    1.63 -0.03),
+        (   2.0 ,    2.0  -0.03),
+        (   2.33,    2.27 -0.03),
+        (   3.33,    3.27 -0.03),
+        (   6.0 ,    5.95 -0.03),
+        (   8.0 ,    7.95 -0.03),
+        (   8.33,    8.40 -0.03),
+        (   9.0 ,    8.9  -0.03),
+        (  10.0 ,    9.9  -0.03),
+        (  12.0 ,   11.9  -0.03),
+        (  15.0 ,   14.95 -0.03),
+        (  17.0 ,   17.05 -0.03),
+        (  17.33,   17.40 -0.03),
+        (  17.67,   17.60 -0.03),
+        (  19.0 ,   18.95 -0.03),
+        (  20.0 ,   19.92 -0.03),
+        (  33.0 ,   32.95 -0.03),
+        (  33.67,   33.57 -0.03),
+        (  34.33,   34.40 -0.03),
+        (  35.0 ,   35.05 -0.03),
+        (  35.33,   35.27 -0.03),
+        (  37.33,   37.40 -0.03),
+        (  37.67,   37.67 -0.03),
+        (  38.0 ,   38.03 -0.03),
+        (  39.0 ,   38.96 -0.03),
+        (  54.0 ,   53.93 -0.03),
+        (  69.0 ,   68.91 -0.03),
+        (  90.0 ,   89.96 -0.03),
+        ( 120.0 ,  119.96 -0.03),
+        ( 126.0 ,  125.93 -0.03),
+        ( 160.0 ,  159.96 -0.03),
+        ( 180.0 ,  179.93 -0.03),
+        (1000.0 , 1000.0  -0.03),
     )),
 }
 beat_distortions['pr'] = beat_distortions['cl']
@@ -166,36 +198,36 @@ colors_by_player = {
     'cl': red,
 }
 octave_offset_by_player = {
-    'v1': 1,
-    'v2': 1,
-    'tn': 0,
-    'pr':-4, 
-    'pl':-1, 
-    'cl':-1,
+    'v1': 0 + 0.5,
+    'v2': 0 + 0.5,
+    'tn':-1 + 0.5,
+    'pr':-5 + 0.5, 
+    'pl':-2 + 0.5, 
+    'cl':-2 + 0.5,
 }
 thickness_by_player = {
     'v1': 0.7,
-    'v2': 0.3,
+    'v2': 0.7,
     'tn': 1.6,
     'pr': 1.0,
     'pl': 1.0,
     'cl': 0.7,
 }
 curve_intensity_by_player = {
-    'v1': 0.0,# 1.0,
-    'v2': 0.0,# 1.0,
-    'tn': 0.0,# 3.0,
-    'pr': 0.0,# 0.0,
-    'pl': 0.0,#-0.5,
-    'cl': 0.0,# 1.0,
+    'v1':  1.0,#0.0,#
+    'v2':  1.0,#0.0,#
+    'tn':  3.0,#0.0,#
+    'pr':  0.0,#0.0,#
+    'pl': -0.5,#0.0,#
+    'cl':  1.0,#0.0,#
 }
 narrowness_by_player = {
-    'v1':1.0,# 5.0,
-    'v2':1.0,# 5.0,
-    'tn':1.0,# 1.0,
-    'pr':1.0,#25.0,
-    'pl':1.0,# 5.0,
-    'cl':1.0,#25.0,
+    'v1': 5.0,#1.0,#
+    'v2': 5.0,#1.0,#
+    'tn': 1.0,#1.0,#
+    'pr':25.0,#1.0,#
+    'pl': 5.0,#1.0,#
+    'cl':25.0,#1.0,#
 }
 
 def height_from_pitch(pitch):
@@ -241,12 +273,13 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
     # draw moving box: 
     for p in ('pr', 'pl', 'cl', 'v1', 'v2', 'tn'):
         relevant_notes = notes_by_player[p][first_active_note_idx_by_player[p]:]
-        for ddb in range(-10, +10):
-            b = int(beat_from_width(frame_nb, WIDTH//2))
-            w = width_from_beat(frame_nb, b+ddb, curve_intensity_by_player[p])
-            if 0<=w<WIDTH:
-                dw = 3 if (b+ddb)%3 == 0 else 0
-                frame[:, w-dw:w+dw , :] = green 
+        if p=='pr': 
+            for ddb in range(-10, +10):
+                b = int(beat_from_width(frame_nb, WIDTH//2))
+                w = width_from_beat(frame_nb, b+ddb, curve_intensity_by_player[p])
+                if 0<=w<WIDTH:
+                    dw = 2 if (b+ddb)%3 == 0 else 1
+                    frame[:, w-dw:w+dw , :] = green/2 
 
         for ii in range(len(relevant_notes)):
             note = relevant_notes[ii]
@@ -275,18 +308,27 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
             ## brightness:
             #cc = lambda b: np.minimum(255, colors[(note.pitch)%12] * brightness * b)
 
+            # ordinary rectangle:
+            if p in ():#'v1','v2','pr','pl','cl'):
+                for g,b in [(1.0,1.0)]:
+                    w_mid = (w_end + w_start)/2.0
+                    w_dif = (w_end - w_start)/2.0
+                    frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
+                        cc(b).astype(np.uint8)
+                    )
+
             if p in ('tn',):
                 # lilting:
                 #try:
+                w_ran = (w_end - w_start)
                 for g,b in [(1.0,0.8), (0.8,1.0)]:
-                    for t in list(np.arange(0.0, 1.01, 0.04))+list(np.sqrt(np.arange(0.5, 1.01, 0.04))):
+                    spacing = 8.0/w_ran
+                    for t in list(np.arange(0.0, 1.+spacing, spacing))+list(np.sqrt(np.arange(0.8, 1.+spacing/5.0, spacing/5.0))):
                         fac = 1.0-max(0.0, min(1.0,
                             0.5*(note.end_beat - note.start_beat)*
                             PIXELS_PER_BEAT/(0.1+abs(w_end-WIDTH//2))
                             if w_start < WIDTH//2 else 0.0
                         ))
-
-                        w_ran = (w_end - w_start)
 
                         fac_b = max(0.0, min(1.0,
                             0.5*(note.end_beat - note.start_beat)*
@@ -294,7 +336,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         ))
 
                         tt = frame_nb/30.0
-                        dd = 0.5 * (2.0-fac_b) * 6.0 #* (8.5 + np.sin(2*3.14159 * tt) - np.sin(2*3.14159 * 3*tt))
+                        dd = 0.8 * (2.0-fac_b) * 6.0 #* (8.5 + np.sin(2*3.14159 * tt) - np.sin(2*3.14159 * 3*tt))
 
                         if next_note is not None and next_note.start_beat < 0.25 + note.end_beat: 
                             h2 = height_from_pitch(next_note.pitch + 12 * octave_offset_by_player[p])
@@ -309,14 +351,14 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
 
                         frame[
                             int(h_start+(0.1*fac*t + (1-fac)*t*t*t)*h_ran-g*dd):int(h_start+(0.1*fac*t + (1-fac)*t*t*t)*h_ran+g*dd),
-                            int(w_start+dd+t*(w_ran-2*dd)-g*dd):int(w_start+dd+t*(w_ran-2*dd)+g*dd),
+                            int(w_start+2*dd+t*(w_ran-4*dd)-g*dd):int(w_start+2*dd+t*(w_ran-4*dd)+g*dd),
                             :
                         ] = cc(b).astype(np.uint8)
                 #except:
                 #    pass
 
 
-            if p in ('v1', 'v2'):
+            if p in ():
                 # appearing rectangle:
                 if True:#w_start < WIDTH//2:
                     for g,b in [(1.0,0.8), (0.8,1.0)]:
@@ -327,7 +369,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                             cc(b).astype(np.uint8)
                         )
 
-            if p in ():
+            if p in ('v1', 'v2'):
                 # galloping rectangle:
                 for g,b in [(1.0,0.8), (0.8,1.0)]:
                     w_mid = (w_end + w_start)/2.0
@@ -341,7 +383,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ('pr','pl', 'cl'):
+            if p in ('pr',):
                 # hollow rectangle:
                 for g,b in [(1.0,1.0), (0.85,0.75), (0.7,0.5), (0.55, 0.25), (0.4,0.0)]:
                     w_mid = (w_end + w_start)/2.0
@@ -350,7 +392,7 @@ for frame_nb in tqdm.tqdm(range(int(FRAME_RATE * DURATION))):
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ():
+            if p in ('pl', 'cl'):
                 # fuzzy rectangle:
                 for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
                     w_mid = (w_end + w_start)/2.0

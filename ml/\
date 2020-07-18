@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage[top=1in, bottom=1in, left=1in, right=1in]{geometry}
+
+\begin{document}
+
+    \begin{center}
+        \LARGE
+        Generalization in Machine Learning 
+    \end{center}
+    
+    \setcounter{section}{-1}
+    \section{Slicing a Cake}
+        \subsection*{The Cake Problem}
+
+            Say we cut a circular cake by choosing $n$ points on its
+            circumference and cutting along the lines through each pair of
+            points. 
+
+        \subsection*{A Powerful Mystery?}
+
+        \subsection*{Euler's Formula}
+
+            $V - E + F = 2$
+
+        \subsection*{Counting Subsets of Points}
+
+        \subsection*{Confidence in Scientific Induction}
+
+\end{document}
