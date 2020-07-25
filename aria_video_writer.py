@@ -22,7 +22,6 @@ notes_by_player = read_midi('music/bach.007.04.mid')
 WIDTH =  1280
 HEIGHT = 720
 FRAME_RATE = 18.0#24.0
-DURATION = 30#215.0
 MAX_DUR = 215.0
 VID_NM = 'temp.mp4'
 AUD_NM = 'music/bach.007.04.mp3'
@@ -40,7 +39,9 @@ START_TIME = 1.22
 
 #
 
-ANIMATE_FROM = 10.0#-START_TIME#10.0
+ANIMATE_FROM = -START_TIME#10.0
+#DURATION     = 215.0
+DURATION    = 80.0   # until end of first solo 
 
 #
 
@@ -196,44 +197,44 @@ colors = [red     ,
 ]
 
 colors_by_player = {
-    'v1': yellow,
-    'v2': orange,
-    'tn': green,
-    'pr': blue,
-    'pl': purple, 
-    'cl': red,
+    'v1': green,#yellow,
+    'v2': green_,#orange,
+    'tn': blue,#green,
+    'pr': blue_,#blue,
+    'pl': purple,#purple, 
+    'cl': purple_,#red,
 }
 octave_offset_by_player = {
-    'v1': -1, # 0 + 0.5,
-    'v2': -1, # 0 + 0.5,
-    'tn': -1, #-1 + 0.5,
-    'pr': -1, #-5 + 0.5, 
-    'pl': -1, #-2 + 0.5, 
-    'cl': -1, #-2 + 0.5,
+    'v1':  0 + 0.5,#-1, #
+    'v2':  0 + 0.5,#-1, #
+    'tn': -1 + 0.5,#-1, #
+    'pr': -5 + 0.5,#-1, #
+    'pl': -2 + 0.5,#-1, #
+    'cl': -2 + 0.5,#-1, #
 }
 thickness_by_player = {
-    'v1': 1.0, #0.7,
-    'v2': 1.0, #0.7,
-    'tn': 1.0, #1.6,
-    'pr': 1.0, #1.0,
-    'pl': 1.0, #1.0,
-    'cl': 1.0, #0.7,
+    'v1': 0.7,#1.0, #
+    'v2': 0.7,#1.0, #
+    'tn': 1.6,#1.0, #
+    'pr': 1.0,#1.0, #
+    'pl': 1.0,#1.0, #
+    'cl': 0.7,#1.0, #
 }
 curve_intensity_by_player = {
-    'v1': 0.0,# 1.0,#
-    'v2': 0.0,# 1.0,#
-    'tn': 0.0,# 3.0,#
-    'pr': 0.0,# 0.0,#
-    'pl': 0.0,#-0.5,#
-    'cl': 0.0,# 1.0,#
+    'v1':  1.0,#3.0,#0.0,#
+    'v2':  1.0,#3.0,#0.0,#
+    'tn':  3.0,#1.0,#0.0,#
+    'pr':  0.0,#1.0,#0.0,#
+    'pl': -0.5,#1.0,#0.0,#
+    'cl':  1.0,#1.0,#0.0,#
 }
 narrowness_by_player = {
-    'v1':1.0,# 5.0,#
-    'v2':1.0,# 5.0,#
-    'tn':1.0,# 1.0,#
-    'pr':1.0,#25.0,#
-    'pl':1.0,# 5.0,#
-    'cl':1.0,#25.0,#
+    'v1':25.0,#
+    'v2':25.0,#
+    'tn':25.0,# 1.0,#
+    'pr':25.0,#25.0,#
+    'pl':25.0,# 5.0,#
+    'cl':25.0,#25.0,#
 }
 
 def height_from_pitch(pitch):
@@ -312,27 +313,40 @@ for frame_nb in tqdm.tqdm(range(0, final_frame)):#int(FRAME_RATE * DURATION))):
                 brightness = 1.3
             hh = int(thickness_by_player[p] * PIXELS_PER_SEMITONE)
 
-            ## instrumental:
+            # instrumental:
             #cc = lambda b: np.minimum(255, colors_by_player[p] * brightness)
             # harmonic:
-            cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
+            #cc = lambda b: np.minimum(255, colors[(note.pitch*5)%12] * brightness * b)
             ## brightness:
             #cc = lambda b: np.minimum(255, colors[(note.pitch)%12] * brightness * b)
+            # instrument and pitch:
+            cc = lambda b: np.minimum(255,
+                    (colors_by_player[p] + 
+                    colors[(note.pitch*5)%12])
+                    * brightness)
 
             # ordinary rectangle:
-            if p in ('v1','v2','pr','pl','cl','tn'):
+            if p in ('pr','pl'):
                 for g,b in [(1.0,1.0)]:
+                    if p in ('pl', 'cl', 'pr'):
+                        b = b/2.0
                     w_mid = (w_end + w_start)/2.0
                     w_dif = (w_end - w_start)/2.0
+                    hh *= (1.0 + 20.0*np.cos(beat_from_width(frame_nb, WIDTH//2)*2*3.141))/21.0
                     frame[int(h-g*hh):int(h+g*hh), int(w_mid-g*w_dif):int(w_mid+g*w_dif), :] = (
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ():
+            if p in ('tn'):
+                if (beat_from_width(frame_nb, WIDTH//2) < 72.0 and
+                    beat_from_width(frame_nb, w_start) > 72.0):
+                    continue
+
                 # lilting:
                 #try:
                 w_ran = (w_end - w_start)
                 for g,b in [(1.0,0.8), (0.8,1.0)]:
+                    b *= 2.0
                     spacing = 8.0/w_ran
                     for t in list(np.arange(0.0, 1.+spacing, spacing))+list(np.sqrt(np.arange(0.8, 1.+spacing/5.0, spacing/5.0))):
                         fac = 1.0-max(0.0, min(1.0,
@@ -356,6 +370,7 @@ for frame_nb in tqdm.tqdm(range(0, final_frame)):#int(FRAME_RATE * DURATION))):
 
                         h_start = h
                         h_ran = h2-h
+                        h_ran *= w_ran/60.0
 
                         #rrr, ccc = circle(int(h_start+(0.1*fac*t + (1-fac)*t*t*t)*h_ran), int(w_start+t*w_ran), int(dd))
                         #frame[rrr, ccc, :] = cc(1.0).astype(np.uint8)
@@ -369,6 +384,14 @@ for frame_nb in tqdm.tqdm(range(0, final_frame)):#int(FRAME_RATE * DURATION))):
                 #    pass
 
 
+            # muted longing long note 
+            # loudness of instrument -> size 
+            # strength of note -> color
+            # background color change  
+            # dynamics -> opacity
+            # Maybe the loudest notes could turn into zigzags or pulsate with jagged edges.  
+            # To combine both ideas, maybe the jagged rectangle/zigzag could explode and have lines go out from it and disappear. 
+            # fade for soft dynamics
             if p in ():
                 # appearing rectangle:
                 if True:#w_start < WIDTH//2:
@@ -380,11 +403,13 @@ for frame_nb in tqdm.tqdm(range(0, final_frame)):#int(FRAME_RATE * DURATION))):
                             cc(b).astype(np.uint8)
                         )
 
-            if p in ():#'v1', 'v2'):
+            if p in ('v1', 'v2'):
                 # galloping rectangle:
                 for g,b in [(1.0,0.8), (0.8,1.0)]:
                     w_mid = (w_end + w_start)/2.0
                     w_dif = (w_end - w_start)/2.0
+
+                    hh *= (1.0 + 20.0*np.cos(beat_from_width(frame_nb, w_mid)*2*3.141)**3)/21.0
 
                     g *= max(0.4, min(1.0, 1.5*(note.end_beat - note.start_beat)*PIXELS_PER_BEAT/(
                         0.1+abs(w_start-WIDTH//2)
@@ -403,7 +428,7 @@ for frame_nb in tqdm.tqdm(range(0, final_frame)):#int(FRAME_RATE * DURATION))):
                         cc(b).astype(np.uint8)
                     )
 
-            if p in ():#'pl', 'cl'):
+            if p in ('cl',):
                 # fuzzy rectangle:
                 for g,b in [(1.0,0.1), (0.9,0.2), (0.8,0.4), (0.7,0.6), (0.6,0.8), (0.5,0.9), (0.4,1.0)]: 
                     w_mid = (w_end + w_start)/2.0
